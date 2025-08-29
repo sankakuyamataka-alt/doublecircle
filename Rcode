@@ -1,0 +1,106 @@
+library(ggplot2)
+library(ggeffects)
+library(dplyr)
+library(broom)
+
+
+TDD_A <- read.table("C:/Users/sanka/Dropbox/PC (2)/Downloads/TDD.csv", header=TRUE, stringsAsFactors=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+TDD_A <- within(TDD, {
+  Fx22_PopD5000 <- as.factor(x22_PopD5000)
+  FX31_man <- as.factor(X31_man)
+  FX33_rent <- as.factor(X33_rent)
+  FX34_garden <- as.factor(X34_garden)
+  Fy11_move2020 <- as.factor(y11_move2020)
+  Fy12_move2021 <- as.factor(y12_move2021)
+})
+TDD_B <- subset(TDD_A, subset=A01_Group == 1)
+TDD_C <- subset(TDD_A, subset=A01_Group == 0)
+
+#Model_1:Density(Liner)
+
+Model1A <- glm(Fy11_move2020 ~ nx21_PopD + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_A)
+Model1B <- glm(Fy12_move2021 ~ nx21_PopD + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_B)
+Model1C <- glm(Fy12_move2021 ~ nx21_PopD + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_C)
+
+summary(Model1A)
+exp(coef(Model1A))
+summary(Model1B)
+exp(coef(Model1B))
+summary(Model1C)
+exp(coef(Model1C))
+ 
+Model1A_p <- ggpredict(Model1A, terms = "nx21_PopD")
+ggplot() + geom_line(data = Model1A_p, aes(x = x, y = predicted)) + geom_ribbon(data = Model1A_p, aes(x = x, ymin = conf.low, ymax = conf.high), alpha = 0.1) + xlim(c(0, 40000)) + ylim(c(0, 1)) + labs(title = "Model1A", x = "Population Density", y = "Relocation Intention")
+Model1B_p <- ggpredict(Model1B, terms = "nx21_PopD")
+ggplot() + geom_line(data = Model1B_p, aes(x = x, y = predicted)) + geom_ribbon(data = Model1B_p, aes(x = x, ymin = conf.low, ymax = conf.high), alpha = 0.1) + xlim(c(0, 40000)) + ylim(c(0, 1)) + labs(title = "Model1B", x = "Population Density", y = "Relocation Intention")
+Model1C_p <- ggpredict(Model1C, terms = "nx21_PopD")
+ggplot() + geom_line(data = Model1C_p, aes(x = x, y = predicted)) + geom_ribbon(data = Model1C_p, aes(x = x, ymin = conf.low, ymax = conf.high), alpha = 0.1) + xlim(c(0, 40000)) + ylim(c(0, 1)) + labs(title = "Model1C", x = "Population Density", y = "Relocation Intention")
+
+#Model_2:Density(Non-liner)
+
+Model2A <- glm(Fy11_move2020 ~ bs(nx21_PopD , df=3) + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_A)
+Model2B <- glm(Fy12_move2021 ~ bs(nx21_PopD , df=3) + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_B)
+Model2C <- glm(Fy12_move2021 ~ bs(nx21_PopD , df=3) + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_C)
+
+summary(Model2A)
+exp(coef(Model2A))
+summary(Model2B)
+exp(coef(Model2B))
+summary(Model2C)
+exp(coef(Model2C))
+
+Model2A_p <- ggpredict(Model2A, terms = "nx21_PopD")
+ggplot() + geom_line(data = Model2A_p, aes(x = x, y = predicted)) + geom_ribbon(data = Model2A_p, aes(x = x, ymin = conf.low, ymax = conf.high), alpha = 0.1) + xlim(c(0, 40000)) + ylim(c(0, 1)) + labs(title = "Model2A", x = "Population Density", y = "Residential Mobility Intention")
+Model2B_p <- ggpredict(Model2B, terms = "nx21_PopD")
+ggplot() + geom_line(data = Model2B_p, aes(x = x, y = predicted)) + geom_ribbon(data = Model2B_p, aes(x = x, ymin = conf.low, ymax = conf.high), alpha = 0.1) + xlim(c(0, 40000)) + ylim(c(0, 1)) + labs(title = "Model2B", x = "Population Density", y = "Residential Mobility Intention")
+Model2C_p <- ggpredict(Model2C, terms = "nx21_PopD")
+ggplot() + geom_line(data = Model2C_p, aes(x = x, y = predicted)) + geom_ribbon(data = Model2C_p, aes(x = x, ymin = conf.low, ymax = conf.high), alpha = 0.1) + xlim(c(0, 40000)) + ylim(c(0, 1)) + labs(title = "Model2C", x = "Population Density", y = "Residential Mobility Intention")
+
+
+#Model_3:Density(Category)
+
+TDD_A$Fx22_PopD5000 <- with(TDD_A, factor(Fx22_PopD5000, levels=c('3','1','2','4','5','6')))
+TDD_B$Fx22_PopD5000 <- with(TDD_B, factor(Fx22_PopD5000, levels=c('3','1','2','4','5','6')))
+TDD_C$Fx22_PopD5000 <- with(TDD_C, factor(Fx22_PopD5000, levels=c('3','1','2','4','5','6')))
+
+Model3A <- glm(y11_move2020 ~ Fx22_PopD5000 + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_A)
+Model3B <- glm(y12_move2021 ~ Fx22_PopD5000 + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_B)
+Model3C <- glm(y12_move2021 ~ Fx22_PopD5000 + X31_man + nX32_age + X33_rent + X34_garden +nX35_commerce + nx36_GreenR, family=binomial(logit), data=TDD_C)
+
+summary(Model3A)
+exp(coef(Model3A))
+summary(Model3B)
+exp(coef(Model3B))
+summary(Model3C)
+exp(coef(Model3C))
+
+Model3A_t <- tidy(Model3A) %>%
+  mutate(
+    conf.low = confint(Model3A)[, 1],
+    conf.high = confint(Model3A)[, 2],
+    OR = exp(estimate),
+    CI_l = exp(conf.low),
+    CI_h = exp(conf.high)
+  )
+Model3A_t_PD <- Model3A_t %>% filter(grepl("Fx22_PopD5000", term))
+ggplot(Model3A_t_PD, aes(x = term, y = OR, color = term)) +  geom_point() + geom_errorbar(aes(ymin = CI_l, ymax = CI_h), width = 0.2) + labs(title = "Model 3A", x = "Population Density", y = "Relocation intention") + scale_x_discrete(labels = c("-5000", "5000-10000", "15000-20000", "20000-25000", "25000-")) + theme_minimal() + geom_hline(yintercept = 1, linetype = "dashed", color = "red") +  ylim(0, 2) + theme(legend.position = "none")
+Model3B_t <- tidy(Model3B) %>%
+  mutate(
+    conf.low = confint(Model3B)[, 1],
+    conf.high = confint(Model3B)[, 2],
+    OR = exp(estimate),
+    CI_l = exp(conf.low),
+    CI_h = exp(conf.high)
+  )
+Model3B_t_PD <- Model3B_t %>% filter(grepl("Fx22_PopD5000", term))
+ggplot(Model3B_t_PD, aes(x = term, y = OR, color = term)) +  geom_point() + geom_errorbar(aes(ymin = CI_l, ymax = CI_h), width = 0.2) + labs(title = "Model 3B", x = "Population Density", y = "Relocation intention") + scale_x_discrete(labels = c("-5000", "5000-10000", "15000-20000", "20000-25000", "25000-")) + theme_minimal() + geom_hline(yintercept = 1, linetype = "dashed", color = "red") +  ylim(0, 2) + theme(legend.position = "none")
+Model3C_t <- tidy(Model3C) %>%
+  mutate(
+    conf.low = confint(Model3C)[, 1],
+    conf.high = confint(Model3C)[, 2],
+    OR = exp(estimate),
+    CI_l = exp(conf.low),
+    CI_h = exp(conf.high)
+  )
+Model3C_t_PD <- Model3C_t %>% filter(grepl("Fx22_PopD5000", term))
+ggplot(Model3C_t_PD, aes(x = term, y = OR, color = term)) +  geom_point() + geom_errorbar(aes(ymin = CI_l, ymax = CI_h), width = 0.2) + labs(title = "Model 3C", x = "Population Density", y = "Relocation intention") + scale_x_discrete(labels = c("-5000", "5000-10000", "15000-20000", "20000-25000", "25000-")) + theme_minimal() + geom_hline(yintercept = 1, linetype = "dashed", color = "red") +  ylim(0, 9) + theme(legend.position = "none")
